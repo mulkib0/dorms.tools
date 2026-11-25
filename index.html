@@ -1,0 +1,239 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="color-scheme" content="dark">
+<meta name="description" content="교무실 부서 공지를 함께 띄우는 전광판">
+<title>교무실 전광판</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body data-view="display">
+
+<!-- ══════════════════ 전광판 ══════════════════ -->
+<section class="view view-display" id="viewDisplay">
+  <div class="frame" aria-hidden="true">
+    <i class="corner tl"></i><i class="corner tr"></i>
+    <i class="corner bl"></i><i class="corner br"></i>
+  </div>
+
+  <header class="display-head">
+    <div class="display-brand">
+      <strong id="dOrg">교무실</strong>
+      <span class="mono">NOTICE DISPLAY</span>
+    </div>
+    <div class="display-meta">
+      <div class="display-time mono" id="dTime">--:--</div>
+      <div class="display-date" id="dDate">----년 --월 --일</div>
+    </div>
+  </header>
+
+  <div class="stage" id="stage" aria-live="polite"></div>
+
+  <footer class="display-foot">
+    <div class="ticker" id="tickerWrap"><div class="ticker-track" id="tickerTrack"></div></div>
+    <nav class="pager" id="pager" aria-label="공지 선택"></nav>
+  </footer>
+
+  <div class="progress" aria-hidden="true"><i id="progressBar"></i></div>
+</section>
+
+<!-- ══════════════════ 부유 컨트롤 ══════════════════ -->
+<div class="hud" id="hud">
+  <button class="hud-btn" type="button" data-hud="manage">공지 관리</button>
+  <button class="hud-btn" type="button" data-hud="pause">일시정지</button>
+  <button class="hud-btn" type="button" data-hud="full">전체화면</button>
+  <button class="hud-btn hud-icon" type="button" data-hud="help" aria-label="단축키 안내">?</button>
+</div>
+
+<!-- ══════════════════ 공지 관리 ══════════════════ -->
+<section class="view view-manage" id="viewManage" hidden>
+  <div class="manage-top">
+    <div class="manage-title">
+      <h1>공지 관리</h1>
+      <span class="mono">NOTICE MANAGEMENT</span>
+    </div>
+    <div class="manage-top-right">
+      <span class="sync" id="syncBadge" data-state="local" title="저장 방식">
+        <i></i><span id="syncText">이 컴퓨터에만 저장</span>
+      </span>
+      <span class="mono manage-clock" id="mClock">--:--</span>
+      <button class="btn btn-ghost" type="button" id="btnSettings">설정</button>
+      <button class="btn btn-primary" type="button" id="btnShowDisplay">전광판 보기</button>
+    </div>
+  </div>
+
+  <div class="manage-grid">
+    <div class="panel">
+      <div class="list-tools">
+        <input class="input" id="searchInput" type="search" placeholder="제목 · 내용 · 담당 검색" autocomplete="off">
+        <select class="select" id="deptFilter"><option value="">전체 부서</option></select>
+        <label class="check"><input type="checkbox" id="showInactive"><span>비활성 포함</span></label>
+      </div>
+      <div class="list-meta">
+        <span id="listCount" class="mono">0건</span>
+        <span class="hint">고정 → 중요도 → 최근 수정 순으로 전광판에 표시됩니다</span>
+      </div>
+      <ul class="notice-list" id="noticeList"></ul>
+    </div>
+
+    <aside class="panel panel-form">
+      <div class="panel-head">
+        <h2 id="formTitle">새 공지 등록</h2>
+        <button class="btn btn-ghost btn-sm" type="button" id="btnNewNotice" hidden>새로 작성</button>
+      </div>
+
+      <form id="noticeForm" autocomplete="off" novalidate>
+        <div class="field">
+          <label class="label" for="fDept">부서</label>
+          <select class="select" id="fDept"></select>
+        </div>
+
+        <div class="field">
+          <label class="label" for="fTitle">제목 <span class="req">필수</span></label>
+          <input class="input" id="fTitle" maxlength="80" placeholder="예) 12월 교직원 회의 일정 안내">
+        </div>
+
+        <div class="field">
+          <label class="label" for="fBody">내용</label>
+          <textarea class="textarea" id="fBody" rows="5" maxlength="600" placeholder="전광판에 표시할 내용을 입력하세요. 줄바꿈도 그대로 표시됩니다."></textarea>
+          <span class="counter mono" id="bodyCount">0 / 600</span>
+        </div>
+
+        <div class="field-row">
+          <div class="field">
+            <label class="label" for="fAuthor">담당</label>
+            <input class="input" id="fAuthor" maxlength="20" placeholder="예) 김하늘">
+          </div>
+          <div class="field">
+            <label class="label" for="fDuration">표시 시간(초)</label>
+            <input class="input" id="fDuration" type="number" min="0" max="120" step="1" placeholder="기본값">
+          </div>
+        </div>
+
+        <div class="field">
+          <span class="label">중요도</span>
+          <div class="segmented" role="radiogroup" aria-label="중요도">
+            <label><input type="radio" name="priority" value="normal" checked><span>일반</span></label>
+            <label><input type="radio" name="priority" value="important"><span>중요</span></label>
+            <label><input type="radio" name="priority" value="urgent"><span>긴급</span></label>
+          </div>
+        </div>
+
+        <div class="field-row">
+          <div class="field">
+            <label class="label" for="fStart">게시 시작</label>
+            <input class="input" id="fStart" type="datetime-local">
+          </div>
+          <div class="field">
+            <label class="label" for="fEnd">게시 종료</label>
+            <input class="input" id="fEnd" type="datetime-local">
+          </div>
+        </div>
+
+        <div class="check-row">
+          <label class="check"><input type="checkbox" id="fPinned"><span>상단 고정</span></label>
+          <label class="check"><input type="checkbox" id="fActive" checked><span>전광판에 게시</span></label>
+        </div>
+
+        <div class="form-actions">
+          <button class="btn btn-primary" type="submit" id="btnSaveNotice">등록</button>
+          <button class="btn btn-ghost" type="button" id="btnCancelEdit" hidden>취소</button>
+          <button class="btn btn-danger" type="button" id="btnDeleteNotice" hidden>삭제</button>
+        </div>
+        <p class="form-note" id="formNote">게시 기간을 비워두면 항상 표시됩니다.</p>
+      </form>
+    </aside>
+  </div>
+</section>
+
+<!-- ══════════════════ 설정 ══════════════════ -->
+<dialog class="dialog" id="settingsDialog">
+  <div class="dialog-inner">
+    <header class="dialog-head">
+      <h2>설정</h2>
+      <button class="icon-btn" type="button" data-close aria-label="닫기">✕</button>
+    </header>
+
+    <div class="dialog-body">
+      <section class="dlg-section">
+        <h3>기본</h3>
+        <div class="field">
+          <label class="label" for="sOrg">학교 · 기관명</label>
+          <input class="input" id="sOrg" maxlength="40">
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label class="label" for="sRotate">공지 회전 시간(초)</label>
+            <input class="input" id="sRotate" type="number" min="4" max="300">
+          </div>
+          <div class="field">
+            <label class="label" for="sScale">글자 크기 <span class="mono" id="sScaleValue">100%</span></label>
+            <input class="range" id="sScale" type="range" min="0.75" max="1.5" step="0.05">
+          </div>
+        </div>
+        <div class="field">
+          <label class="label" for="sTicker">하단 안내 문구</label>
+          <input class="input" id="sTicker" maxlength="140" placeholder="비워두면 기본 문구가 흐릅니다">
+          <label class="check" style="margin-top:8px"><input type="checkbox" id="sShowTicker"><span>하단 안내 문구 표시</span></label>
+        </div>
+      </section>
+
+      <section class="dlg-section">
+        <h3>부서</h3>
+        <ul class="dept-rows" id="deptRows"></ul>
+        <button class="btn btn-ghost btn-sm" type="button" id="btnAddDept">부서 추가</button>
+      </section>
+
+      <section class="dlg-section">
+        <h3>데이터</h3>
+        <div class="data-actions">
+          <button class="btn btn-ghost btn-sm" type="button" id="btnExport">JSON 내보내기</button>
+          <button class="btn btn-ghost btn-sm" type="button" id="btnImport">JSON 가져오기</button>
+          <input type="file" id="importFile" accept="application/json,.json" hidden>
+          <button class="btn btn-danger btn-sm" type="button" id="btnReset">전체 초기화</button>
+        </div>
+
+        <div class="share-box" id="shareBox" hidden>
+          <span class="label">선생님들께 알려줄 주소</span>
+          <div class="share-row">
+            <input class="input mono" id="shareUrl" readonly>
+            <button class="btn btn-ghost btn-sm" type="button" id="btnCopyUrl">복사</button>
+          </div>
+          <p class="form-note">같은 교내 네트워크에서 이 주소로 접속하면 모두 같은 전광판을 함께 봅니다.</p>
+        </div>
+
+        <p class="form-note" id="localOnlyNote">
+          지금은 이 컴퓨터 브라우저에만 저장됩니다. 부서 선생님들이 함께 쓰려면
+          <b>start.command</b>(macOS) 또는 <b>start.bat</b>(Windows)을 실행해 동기화 서버를 켜 주세요.
+        </p>
+      </section>
+    </div>
+  </div>
+</dialog>
+
+<!-- ══════════════════ 단축키 ══════════════════ -->
+<dialog class="dialog dialog-sm" id="helpDialog">
+  <div class="dialog-inner">
+    <header class="dialog-head">
+      <h2>전광판 조작</h2>
+      <button class="icon-btn" type="button" data-close aria-label="닫기">✕</button>
+    </header>
+    <div class="dialog-body">
+      <dl class="keys">
+        <dt><kbd>Space</kbd></dt><dd>자동 넘김 일시정지 / 재생</dd>
+        <dt><kbd>←</kbd> <kbd>→</kbd></dt><dd>이전 / 다음 공지</dd>
+        <dt><kbd>1</kbd>–<kbd>9</kbd></dt><dd>해당 번호 공지로 바로 이동</dd>
+        <dt><kbd>F</kbd></dt><dd>전체화면 전환</dd>
+        <dt><kbd>A</kbd></dt><dd>공지 관리 화면 열기</dd>
+        <dt><kbd>+</kbd> <kbd>−</kbd></dt><dd>글자 크기 조절</dd>
+      </dl>
+    </div>
+  </div>
+</dialog>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script src="app.js"></script>
+</body>
+</html>
