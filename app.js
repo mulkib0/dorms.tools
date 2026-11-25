@@ -33,7 +33,8 @@
     scale: 1,
     showTicker: true,
     ticker: '',
-    defaultDept: 'plan'
+    defaultDept: 'plan',
+    theme: 'dark'          // 'dark' | 'light'
   };
 
   const DEFAULT_TICKER = '오늘도 안전하고 즐거운 학교생활 되세요.';
@@ -132,6 +133,7 @@
     base.settings.scale = clamp(Number(base.settings.scale) || 1, 0.75, 1.5);
     base.settings.showTicker = base.settings.showTicker !== false;
     base.settings.ticker = String(base.settings.ticker || '');
+    base.settings.theme = base.settings.theme === 'light' ? 'light' : 'dark';
     if (!base.departments.some((d) => d.id === base.settings.defaultDept)) {
       base.settings.defaultDept = base.departments[0].id;
     }
@@ -796,6 +798,7 @@
   }
 
   function renderAll() {
+    applyTheme();
     renderBrand();
     renderDeptFilter();
     renderFormDeptOptions();
@@ -935,6 +938,7 @@
     $('#sScaleValue').textContent = Math.round(state.settings.scale * 100) + '%';
     $('#sTicker').value = state.settings.ticker;
     $('#sShowTicker').checked = state.settings.showTicker;
+    applyTheme();
     renderDeptRows();
     const dialog = $('#settingsDialog');
     if (typeof dialog.showModal === 'function') dialog.showModal();
@@ -1244,6 +1248,11 @@
       persistLocal();
       scheduleServerSync();
     });
+    $$('input[name="theme"]').forEach(function (radio) {
+      radio.addEventListener('change', function () {
+        if (radio.checked) setTheme(radio.value);
+      });
+    });
     $('#sShowTicker').addEventListener('change', function () {
       state.settings.showTicker = $('#sShowTicker').checked;
       renderTicker();
@@ -1347,6 +1356,22 @@
     window.addEventListener('storage', function (event) {
       if (event.key === STORAGE_KEY) applyFromLocal();
     });
+  }
+
+  /** 화면 테마를 문서에 반영한다. 실제 색은 styles.css 의 토큰이 담당한다. */
+  function applyTheme() {
+    const theme = state.settings.theme === 'light' ? 'light' : 'dark';
+    document.documentElement.dataset.theme = theme;
+    $$('input[name="theme"]').forEach(function (radio) {
+      radio.checked = radio.value === theme;
+    });
+  }
+
+  function setTheme(theme) {
+    const next = theme === 'light' ? 'light' : 'dark';
+    state.settings.theme = next;
+    applyTheme();
+    touch();
   }
 
   function applyScale() {
