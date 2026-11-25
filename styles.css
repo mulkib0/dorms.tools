@@ -76,6 +76,66 @@
   --dscale: 1;      /* 전광판 글자 배율 */
 }
 
+/* ── 토큰 : 라이트 ────────────────────────────────────── */
+/* 밝은 교무실·프로젝터에서 쓰는 테마. 잉크는 진하게, 종이는 살짝 회청색으로 둔다. */
+html[data-theme="light"]{
+  color-scheme: light;
+
+  --bg:        #EDF0F5;
+  --bg-2:      #F6F8FC;
+  --surface:   #FFFFFF;
+  --surface-2: #F2F5FA;
+  --surface-3: #E6EBF3;
+  --well-focus:#FFFFFF;
+
+  --line:        rgba(19,30,45,.10);
+  --line-strong: rgba(19,30,45,.20);
+
+  --text:   #121A24;
+  --text-2: #414F63;
+  --text-3: #57647A;
+  --text-4: #5E6B7E;
+
+  --accent:        #82530B;
+  --accent-soft:   rgba(130,83,11,.10);
+  --accent-soft-2: rgba(130,83,11,.14);
+  --accent-line:   rgba(130,83,11,.30);
+  --accent-ring:   rgba(130,83,11,.15);
+  --danger:        #B93F2C;
+  --danger-soft:   rgba(185,63,44,.09);
+  --danger-line:   rgba(185,63,44,.30);
+  --danger-line-2: rgba(185,63,44,.48);
+  --danger-ring:   rgba(185,63,44,.13);
+  --ok:            #1C7A57;
+  --ok-ring:       rgba(28,122,87,.18);
+
+  --on-solid:   #FFFFFF;
+  --solid-hover:#2B3646;
+
+  --title:           #141B24;
+  --title-important: #6B4606;
+  --title-urgent:    #8A2C1D;
+  --body-text:       #3C4A5C;
+  --glow:            .13;
+
+  --hover-1:   rgba(19,30,45,.055);
+  --hover-2:   rgba(19,30,45,.060);
+  --hover-3:   rgba(19,30,45,.080);
+  --row-hover: rgba(19,30,45,.028);
+  --track:     rgba(19,30,45,.07);
+  --dot:       rgba(19,30,45,.18);
+  --dot-hover: rgba(19,30,45,.34);
+  --wash-1:    rgba(96,128,224,.10);
+  --wash-2:    rgba(206,148,46,.09);
+
+  --hud-bg:     rgba(255,255,255,.78);
+  --toast-bg:   rgba(255,255,255,.97);
+  --error-text: #8A2C1D;
+  --backdrop:   rgba(18,26,38,.34);
+  --shadow-lg:  0 30px 70px -28px rgba(23,35,52,.30);
+  --shadow-md:  0 16px 34px -18px rgba(23,35,52,.28);
+}
+
 /* ── 리셋 ─────────────────────────────────────────────── */
 *,*::before,*::after{ box-sizing:border-box; }
 html,body{ height:100%; }
@@ -539,6 +599,21 @@ kbd{
 }
 .toast.is-on{ opacity:1; transform:translate(-50%,0); }
 .toast[data-kind="error"]{ border-color:var(--danger-line-2); color:var(--error-text); }
+
+/* ══════════════ 라이트 테마 보정 ══════════════ */
+/* 부서 색은 밝은 파스텔이라 흰 바탕에서는 글자로 쓰기 어렵다.
+   테마가 라이트일 때만 잉크 쪽으로 섞어 대비를 확보한다. (지원 브라우저 한정) */
+html[data-theme="light"] .chip{
+  color:var(--text-2);
+  color:color-mix(in oklab, var(--c,#E9B25C), #0B1219 50%);
+}
+html[data-theme="light"] .ni-chip{
+  color:var(--text-2);
+  color:color-mix(in oklab, var(--c,#7C9CFF), #0B1219 50%);
+}
+/* 밝은 바탕에서는 무대 조명의 경계가 도드라지므로 흐림을 조금 더 준다. */
+html[data-theme="light"] .stage::before{ filter:blur(34px); }
+html[data-theme="light"] .hud{ box-shadow:0 10px 26px -16px rgba(23,35,52,.30); }
 
 /* ══════════════ 반응형 ══════════════ */
 @media (max-width:1080px){
